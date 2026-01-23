@@ -1,4 +1,9 @@
-# ${PLUGIN_NAME_CAPITALIZED} JexPlugin CLI Arguments
+# ${PLUGIN_NAME_CAPITALIZED} Plugin CLI Arguments
+
+# Optional config section for plugin settings
+# Uncomment to use a custom help file instead of auto-generated help
+# config:
+#   help_text_file: "/help.txt"
 
 options:
   - name: help

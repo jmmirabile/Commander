@@ -1,0 +1,33 @@
+Jex Plugin Generator
+Creates a new Jex plugin project with Maven structure
+
+Usage:
+  jex new-plugin <plugin-name> [options]
+
+Options:
+  -h                       Display quick help (options only)
+  --help                   Display this detailed help
+  -p, --package <package>  Java package name for the plugin
+
+This will create a Java Maven project with:
+  • Plugin class implementing the JexPlugin interface
+  • arguments.yaml for CLI argument definitions
+  • pom.xml configured for Jex plugins
+  • README.md with usage instructions
+  • Complete project structure ready to open in your IDE
+
+Examples:
+  jex new-plugin my-tool
+    Creates a plugin with default package: com.example.mytool
+
+  jex new-plugin my-tool --package com.mycompany.tools
+    Creates a plugin with custom package
+
+After generation:
+  1. cd my-tool-plugin
+  2. Open in your IDE (IntelliJ, Eclipse, VS Code)
+  3. Implement your plugin logic
+  4. Build: mvn clean package
+  5. Install: jex --install-plugin my-tool --jar target/my-tool-plugin.jar
+
+For more information, see the generated README.md

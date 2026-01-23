@@ -94,7 +94,10 @@ ${ARTIFACT_ID}/
 
 1. Edit `${CLASS_NAME}.java` to implement your logic
 2. Update `arguments.yaml` to define CLI arguments
-3. Update this README with usage information
+3. (Optional) Create `src/main/resources/help.txt` for custom help text
+   - Uncomment `config.help_text_file` in `arguments.yaml` to enable
+   - If not specified, help is auto-generated from options
+4. Update this README with usage information
 
 ## License
 

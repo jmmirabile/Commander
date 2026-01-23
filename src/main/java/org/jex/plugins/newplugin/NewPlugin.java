@@ -4,7 +4,7 @@ import org.jex.cli.JexPlugin;
 import org.jex.cli.PathConfig;
 import org.jex.cli.JexMavenUtil;
 import org.jex.cli.ArgumentParser;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,60 +24,34 @@ public class NewPlugin implements JexPlugin {
 
     @Override
     public void execute(String[] args) {
-        // Load options from bundled arguments.yaml
-        Options options = ArgumentParser.loadOptionsFromResource("/plugins/newplugin/arguments.yaml", this.getClass());
+        // Parse arguments - automatically handles help, empty args, and errors
+        CommandLine cmd = ArgumentParser.parse(args, getName(), "/plugins/newplugin/arguments.yaml", this.getClass());
+        if (cmd == null) return;  // Help was shown
 
-        CommandLineParser parser = new DefaultParser();
-        HelpFormatter formatter = new HelpFormatter();
-
-        try {
-            CommandLine cmd = parser.parse(options, args);
-
-            if (cmd.hasOption("h")) {
-                printHelp(formatter, options);
-                return;
-            }
-
-            // Get plugin name from remaining arguments
-            String[] remainingArgs = cmd.getArgs();
-            if (remainingArgs.length == 0) {
-                System.err.println("Error: JexPlugin name is required");
-                printHelp(formatter, options);
-                System.exit(1);
-            }
-
-            String pluginName = remainingArgs[0];
-            String javaPackage = cmd.getOptionValue("package");
-
-            // Check Maven availability
-            if (!isMavenAvailable()) {
-                System.err.println("\nError: Maven is required for plugin development");
-                System.err.println("Please install Maven: https://maven.apache.org/install.html");
-                System.err.println("\nVerify installation with: mvn --version");
-                System.exit(1);
-            }
-
-            // Install Jex to Maven local repo (if not already there)
-            installJexToMavenRepo();
-
-            // Generate the plugin
-            generate(pluginName, javaPackage);
-
-        } catch (ParseException e) {
-            System.err.println("Error parsing arguments: " + e.getMessage());
-            printHelp(formatter, options);
+        // Get plugin name from remaining arguments
+        String[] remainingArgs = cmd.getArgs();
+        if (remainingArgs.length == 0) {
+            System.err.println("Error: Plugin name is required");
+            System.err.println("Usage: jex new-plugin <plugin-name> [options]");
             System.exit(1);
         }
-    }
 
+        String pluginName = remainingArgs[0];
+        String javaPackage = cmd.getOptionValue("package");
 
-    private void printHelp(HelpFormatter formatter, Options options) {
-        System.out.println("\nJex JexPlugin Generator");
-        System.out.println("Creates a new Jex plugin project with Maven structure\n");
-        formatter.printHelp("jex new-plugin <plugin-name> [options]", "\nOptions:", options, "");
-        System.out.println("\nExample:");
-        System.out.println("  jex new-plugin my-tool");
-        System.out.println("  jex new-plugin my-tool --package com.mycompany.tools");
+        // Check Maven availability
+        if (!isMavenAvailable()) {
+            System.err.println("\nError: Maven is required for plugin development");
+            System.err.println("Please install Maven: https://maven.apache.org/install.html");
+            System.err.println("\nVerify installation with: mvn --version");
+            System.exit(1);
+        }
+
+        // Install Jex to Maven local repo (if not already there)
+        installJexToMavenRepo();
+
+        // Generate the plugin
+        generate(pluginName, javaPackage);
     }
 
     private void generate(String pluginName, String javaPackage) {

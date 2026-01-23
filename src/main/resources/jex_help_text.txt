@@ -1,0 +1,26 @@
+Jex - JexPlugin-based CLI Framework
+
+Usage:
+  jex [options]           - Run Jex built-in commands
+  jex <plugin> [args...]  - Run a plugin
+
+Built-in Commands:
+     --install                          Install Jex (create directories, install JAR, wrapper scripts)
+  -l,--list                             List all installed plugins
+  -h,--help                             Display help information
+  -v,--version                          Display version
+
+Plugin Management:
+     --install-plugin <name> --jar <file>    Install a plugin
+     --update-plugin <name> --jar <file>     Update an existing plugin
+     --uninstall-plugin <name>               Uninstall a plugin
+
+Examples:
+  jex --install                                  Install Jex
+  jex --list                                     List installed plugins
+  jex new-plugin my-tool                         Create a new plugin project
+  jex new-plugin my-tool --package com.example   With custom package
+  jex --install-plugin my-tool --jar target/my-tool-plugin.jar
+  jex --update-plugin my-tool --jar target/my-tool-plugin.jar
+  jex --uninstall-plugin my-tool
+  jex <plugin-name> --help                       Show plugin help

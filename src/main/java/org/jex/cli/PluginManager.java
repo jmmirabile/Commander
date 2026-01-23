@@ -134,7 +134,11 @@ public class PluginManager {
      * Save plugin registry to YAML file.
      */
     private void saveRegistry(Map<String, Map<String, String>> registry) throws IOException {
-        Yaml yaml = new Yaml();
+        org.yaml.snakeyaml.DumperOptions options = new org.yaml.snakeyaml.DumperOptions();
+        options.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK);
+        options.setPrettyFlow(true);
+
+        Yaml yaml = new Yaml(options);
         try (Writer writer = Files.newBufferedWriter(registryFile)) {
             yaml.dump(registry, writer);
         }

@@ -4,7 +4,7 @@
   <groupId>org.jex.cli</groupId>
   <artifactId>Jex</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.2.2</version>
+  <version>1.0.3</version>
   <name>Jex</name>
   <url>http://maven.apache.org</url>
   <dependencies>

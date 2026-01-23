@@ -294,6 +294,271 @@ jex test <path>                        # hypothetical test runner plugin
 - [x] Added cross-platform installation instructions to generated README
 - [x] Updated README.md and CLAUDE.md for v1.0.2.2
 
+## Completed (v1.0.3 - Released 2026-01-23)
+
+- [x] ArgumentParser Help System Refactoring (Major Developer Experience Improvement)
+  - `ArgumentParser.parse()` - Single method handles all argument parsing, help, and errors
+  - Two-tier help system: `-h` (quick reference) vs `--help` (detailed documentation)
+  - Custom help.txt file support via config section in arguments.yaml
+  - Help works with required options (checked before validation)
+  - Better error messages with context
+- [x] Plugin code reduced from ~20 lines to 2 lines for argument handling
+- [x] Updated plugin templates to use new simplified pattern
+- [x] NewPlugin refactored to eat its own dog food (uses new ArgumentParser.parse())
+- [x] Created help.txt for NewPlugin as example
+- [x] Backward compatible - old loadOptionsFromResource() still works (deprecated)
+
+### ArgumentParser Help System Refactoring - Details
+
+#### Problem Statement (Solved)
+
+**Issue 1: Help Not Displaying When Required Options Are Missing**
+- Running `jex <plugin> --help` throws "Missing required option: <option>" instead of showing help
+- Root cause: Apache Commons CLI `parser.parse()` validates ALL required options before plugin can check for --help flag
+- User feedback: "If the argument is empty, -h or --help or doesn't match any of the arguments in arguments.yaml, the plugin help should be printed"
+
+**Issue 2: ArgumentParser Is Not Actually Parsing Arguments**
+- Class is called ArgumentParser but it only loads YAML definitions
+- Each plugin must manually create DefaultParser, call parse(), handle exceptions
+- Repetitive boilerplate in every plugin
+- User feedback: "I feel like ArgumentParser should also parse the user's arguments, not just read the yaml file"
+
+**Issue 3: No Support for Custom Help Documentation**
+- Developers may want custom help.txt file with formatted documentation
+- Current system only auto-generates help from options
+- Need two-tier approach: custom help file OR auto-generated from options
+
+### Design Decisions
+
+#### 1. arguments.yaml Structure with Config Section
+
+Plugins will support a `config` section separate from `options`:
+
+```yaml
+config:
+  help_text_file: help.txt
+
+options:
+  - short: h
+    long: help
+    description: "Display help information"
+    hasArg: false
+    required: false
+  - short: u
+    long: url
+    description: "Target URL"
+    hasArg: true
+    required: true
+    argName: URL
+```
+
+**Rationale:**
+- Keeps configuration metadata separate from CLI options
+- Clean separation of concerns
+- help_text_file is optional - if not present, auto-generate from options
+
+#### 2. Enhanced loadOptionsFromResource() Method
+
+Update existing method to accept args and return CommandLine:
+```java
+public static CommandLine loadOptionsFromResource(String resourcePath, Class<?> contextClass, String[] args)
+```
+
+**Behavior:**
+1. Load Options from resourcePath (relative to plugin JAR, e.g., `/arguments.yaml`)
+2. Load config section to check for custom help_text_file
+3. If args.length == 0 → show help and return null
+4. If args contains "-h" or "--help" → show help and return null
+5. Try to parse with DefaultParser.parse(options, args)
+6. If ParseException → show error, show help, exit(1)
+7. Return CommandLine with parsed arguments on success
+
+**Return Value:**
+- Returns `CommandLine` object (not `Options`)
+- Developer uses `cmd.hasOption("x")` to check if option was provided
+- Developer uses `cmd.getOptionValue("x")` to get the value
+- Returns `null` if help was shown (developer should return early)
+
+**Rationale:**
+- Centralizes ALL argument handling in one place
+- Plugin code becomes simple: one method call returns parsed CommandLine
+- Handles all edge cases consistently
+- Checks for help BEFORE validation (fixes Issue 1)
+- Developer doesn't know how many args user will provide, so they check hasOption() for each
+
+#### 3. Two-Tier Help System
+
+**showHelp() method:**
+1. Check if config.help_text_file is defined in arguments.yaml
+2. If yes, load file from plugin resources (e.g., `/help.txt`)
+3. If no, auto-generate using HelpFormatter from options
+4. Display to user
+
+**Rationale:**
+- Gives developers choice: custom formatted help OR auto-generated
+- Custom help allows rich formatting, examples, detailed documentation
+- Auto-generated ensures help always available even without custom file
+- HelpFormatter is NOT deprecated in Commons CLI 1.11.0 (verified)
+
+#### 4. Simplified Plugin Template
+
+**Before (complex, error-prone):**
+```java
+public void execute(String[] args) {
+    Options options = ArgumentParser.loadOptionsFromResource("/arguments.yaml", this.getClass());
+    CommandLineParser parser = new DefaultParser();
+    HelpFormatter formatter = new HelpFormatter();
+
+    try {
+        CommandLine cmd = parser.parse(options, args);
+
+        if (cmd.hasOption("h")) {
+            formatter.printHelp("jex " + getName(), options);
+            return;
+        }
+
+        // Plugin logic...
+
+    } catch (ParseException e) {
+        System.err.println("Error: " + e.getMessage());
+        formatter.printHelp("jex " + getName(), options);
+        System.exit(1);
+    }
+}
+```
+
+**After (simple, consistent):**
+```java
+public void execute(String[] args) {
+    CommandLine cmd = ArgumentParser.parse(args, getName(), this.getClass());
+    if (cmd == null) return;  // Help was shown
+
+    // Check which options were provided
+    if (cmd.hasOption("u")) {
+        String url = cmd.getOptionValue("u");
+        // process url
+    }
+
+    if (cmd.hasOption("n")) {
+        String name = cmd.getOptionValue("n");
+        // process name
+    }
+}
+```
+
+**Rationale:**
+- Reduces plugin code from ~20 lines to 2 lines for argument handling
+- Eliminates boilerplate and potential bugs
+- Consistent behavior across all plugins
+- New developers have less to learn
+
+### ArgumentParser API Reference
+
+**Primary Method:**
+```java
+public static CommandLine parse(String[] args, String pluginName, Class<?> contextClass)
+```
+- Loads options from `/arguments.yaml` in plugin resources
+- Handles help flags, empty args, and validation errors automatically
+- Returns `CommandLine` with parsed arguments, or `null` if help was shown
+
+**Custom Resource Path:**
+```java
+public static CommandLine parse(String[] args, String pluginName, String resourcePath, Class<?> contextClass)
+```
+- Same as above but loads from custom resource path
+- Useful for internal plugins with non-standard paths
+
+**Two-Tier Help System:**
+- `-h` → Quick reference (auto-generated from options only)
+- `--help` → Detailed help (uses custom help.txt if configured, otherwise same as -h)
+- No args → Shows detailed help with "No arguments provided" message
+- Parse errors → Shows quick reference with error message
+
+**arguments.yaml Config Section:**
+```yaml
+config:
+  help_text_file: "/help.txt"  # Optional: path to custom help file
+
+options:
+  - short: h
+    long: help
+    description: "Display help information"
+    hasArg: false
+    required: false
+```
+
+**Backward Compatibility:**
+- Old `loadOptionsFromResource()` method deprecated but still works
+- Existing plugins don't need to migrate immediately
+- New plugin template uses new `parse()` method
+
+### Implementation Summary
+
+- [x] **Updated ArgumentParser.java**
+  - [x] Added `parse(String[] args, String pluginName, Class<?> contextClass)` method
+  - [x] Added `parse(String[] args, String pluginName, String resourcePath, Class<?> contextClass)` overload for custom paths
+  - [x] Implemented two-tier help system:
+    - `showShortHelp()` for `-h` flag (auto-generated from options)
+    - `showLongHelp()` for `--help` flag (custom help.txt if available)
+  - [x] Added `loadCustomHelp(String helpFile, Class<?> contextClass)` method
+  - [x] Added `loadOptionsAndConfigFromResource()` to load config section
+  - [x] Updated `loadOptionsFromYaml()` to clean up redundant code
+  - [x] Deprecated old `loadOptionsFromResource()` method (kept for backward compatibility)
+
+- [x] **Updated Plugin Template (PluginTemplate.java)**
+  - [x] Simplified execute() method to use new ArgumentParser.parse()
+  - [x] Removed manual DefaultParser, HelpFormatter creation
+  - [x] Removed try/catch boilerplate
+  - [x] Reduced from ~20 lines to 3 lines for argument handling
+
+- [x] **Updated Arguments YAML Template (ArgumentsTemplate.yaml)**
+  - [x] Added example config section with help_text_file commented out
+  - [x] Added documentation comments explaining config section
+
+- [x] **Updated Generated README Template (ReadmeTemplate.md)**
+  - [x] Documented optional help.txt file in resources
+  - [x] Added customization step for custom help files
+
+- [x] **Updated NewPlugin (Eating Own Dog Food)**
+  - [x] Created `/plugins/newplugin/help.txt` with rich documentation
+  - [x] Updated NewPlugin's arguments.yaml with config.help_text_file
+  - [x] Simplified NewPlugin.java to use new ArgumentParser.parse()
+  - [x] Removed printHelp() method (now handled automatically)
+  - [x] Reduced from ~70 lines to ~30 lines
+
+- [x] **Testing**
+  - [x] Test with no args → shows long help + "No arguments provided" message
+  - [x] Test with -h → shows short help (auto-generated)
+  - [x] Test with --help → shows long help (custom help.txt)
+  - [x] Test with unknown option → shows error + short help
+  - [x] Test with custom help.txt file (NewPlugin)
+  - [x] Generate new plugin and verify template works
+
+- [ ] **Documentation** (Next steps)
+  - [ ] Update main README.md with ArgumentParser.parse() usage
+  - [ ] Document config section in arguments.yaml
+  - [x] Update CLAUDE.md with completed work
+
+### Version Impact
+
+This is NOT a breaking change - fully backward compatible:
+- Old `loadOptionsFromResource()` method deprecated but still fully functional
+- New `parse()` method is optional but recommended
+- Existing plugins continue to work without modification
+- New generated plugins use new simplified pattern
+
+**Released as v1.0.3 on 2026-01-23**
+
+### Key Benefits Achieved
+
+1. **Plugin code reduced by ~90%** for argument handling (20 lines → 2 lines)
+2. **Help works with required options** - Help flag checked BEFORE validation
+3. **Better error messages** - Context provided before showing help
+4. **Two-tier help system** - Quick reference (-h) vs detailed documentation (--help)
+5. **Custom help text support** - Plugins can include formatted help.txt files
+6. **Eating own dog food** - NewPlugin uses the same simplified pattern it generates
+
 ## Archive: v1.0.3 - Plugin Management CRUD Operations (COMPLETED IN v1.0.2.2)
 
 ### Feature: Developer Plugin Management Commands
@@ -514,7 +779,7 @@ Combination of Option 3 + 5:
 
 ## Notes
 
-- Current version: 1.0.2.2 (as of 2026-01-10)
+- Current version: 1.0.3 (as of 2026-01-23)
 - Project renamed from "Commander" to "Jex" on 2026-01-03
 - Main branch: `main`
 - Deployment: Fat JAR distribution (`jex.jar`)

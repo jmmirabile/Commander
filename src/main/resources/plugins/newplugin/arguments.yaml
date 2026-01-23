@@ -1,4 +1,6 @@
-# New JexPlugin Generator CLI Arguments
+# New Plugin Generator CLI Arguments
+config:
+  help_text_file: "/plugins/newplugin/help.txt"
 
 options:
   - name: help

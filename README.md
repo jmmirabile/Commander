@@ -72,11 +72,11 @@ to see the Plugin's help and options.
 
 ### Installation
 
-1. **Download** the `Jex-1.0.2.2.jar` file (fat JAR with all dependencies) from the Releases link.
+1. **Download** the `Jex-1.0.3.jar` file (fat JAR with all dependencies) from the Releases link.
 
 2. **Run install** to set up Jex:
    ```bash
-   java -jar Jex-1.0.2.2.jar --install
+   java -jar Jex-1.0.3.jar --install
    ```
    After installation completes, the following has been created:
    * Configuration directories (OS-specific locations)
@@ -422,27 +422,60 @@ import org.jex.cli.JexPlugin;
 
        @Override
        public void execute(String[] args) {
-           // Your plugin logic here
+           // Parse arguments - automatically handles help, errors, and validation
+           CommandLine cmd = ArgumentParser.parse(args, getName(), this.getClass());
+           if (cmd == null) return;  // Help was shown
+
+           // Access arguments using:
+           if (cmd.hasOption("input")) {
+               String inputFile = cmd.getOptionValue("input");
+               // Process input file
+           }
        }
    }
    ```
 
+   **Note:** The new `ArgumentParser.parse()` method automatically handles:
+   - Empty arguments → Shows help
+   - `-h` flag → Shows quick reference (auto-generated from options)
+   - `--help` flag → Shows detailed help (custom help.txt if available)
+   - Parse errors → Shows error message and quick reference
+   - Validation → Checks required options and returns CommandLine
+
 3. **Define CLI arguments** in `src/main/resources/arguments.yaml`:
    ```yaml
+   # Optional: Use custom help file for detailed documentation
+   # config:
+   #   help_text_file: "/help.txt"
+
    options:
+     - name: help
+       short: h
+       long: help
+       description: "Display help information"
+       required: false
+       hasArg: false
      - name: input
        short: i
        long: input-file
        description: "Input file path"
        required: true
        hasArg: true
+       argName: "file"
    ```
 
-4. **Build the plugin JAR** with `arguments.yaml` included as a resource
+4. **(Optional) Create custom help file** at `src/main/resources/help.txt`:
+   - Uncomment `config.help_text_file` in `arguments.yaml`
+   - Add detailed documentation, examples, and usage instructions
+   - Shown when user runs `jex <plugin> --help`
+   - If not specified, help is auto-generated from options
 
-5. **Install the plugin**:
-   - Copy JAR to `~/.config/Jex/plugins/`
-   - Register in `plugin.yaml`
+5. **Build the plugin JAR** with `arguments.yaml` included as a resource
+
+6. **Install the plugin**:
+   ```bash
+   jex --install-plugin my-plugin --jar target/my-plugin.jar
+   ```
 
 ### Plugin Template Structure
 
@@ -512,7 +545,7 @@ Jex/
 │   │   │   ├── JexPlugin.java        # JexPlugin interface (2 methods)
 │   │   │   ├── PluginLoader.java     # Dynamic JAR loading via URLClassLoader
 │   │   │   ├── PathConfig.java       # OS-aware path management
-│   │   │   ├── ArgumentParser.java   # YAML to CLI options conversion
+│   │   │   ├── ArgumentParser.java   # Argument parsing with automatic help handling
 │   │   │   └── JexMavenUtil.java     # Maven utilities (dynamic version detection)
 │   │   ├── java/org/jex/plugins/
 │   │   │   └── newplugin/
