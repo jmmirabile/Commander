@@ -5,14 +5,12 @@ config:
 options:
   - name: help
     short: h
-    long: help
     description: "Display help information"
     required: false
     hasArg: false
 
   - name: package
     short: p
-    long: package
     description: "Java package name for the plugin"
     required: false
     hasArg: true

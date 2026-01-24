@@ -268,7 +268,12 @@ public class ArgumentParser {
                 builder.option((String) optionConfig.get("short"));
             }
 
-            if (optionConfig.containsKey("long")) {
+            // Use 'name' as the long option (primary identifier)
+            // Backward compatibility: fall back to 'long' if 'name' not present
+            if (optionConfig.containsKey("name")) {
+                builder.longOpt((String) optionConfig.get("name"));
+            } else if (optionConfig.containsKey("long")) {
+                // Legacy: still support old 'long' field for backward compatibility
                 builder.longOpt((String) optionConfig.get("long"));
             }
 

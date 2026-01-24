@@ -467,15 +467,13 @@ import org.jex.cli.JexPlugin;
    #   help_text_file: "/help.txt"
 
    options:
-     - name: help
-       short: h
-       long: help
+     - name: help        # Primary identifier - use in code as cmd.hasOption("help")
+       short: h          # Short option: -h
        description: "Display help information"
        required: false
        hasArg: false
-     - name: input
-       short: i
-       long: input-file
+     - name: input       # Use in code as cmd.getOptionValue("input")
+       short: i          # Short option: -i, long option: --input
        description: "Input file path"
        required: true
        hasArg: true

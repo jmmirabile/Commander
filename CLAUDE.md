@@ -339,13 +339,13 @@ config:
   help_text_file: help.txt
 
 options:
-  - short: h
-    long: help
+  - name: help
+    short: h
     description: "Display help information"
     hasArg: false
     required: false
-  - short: u
-    long: url
+  - name: url
+    short: u
     description: "Target URL"
     hasArg: true
     required: true

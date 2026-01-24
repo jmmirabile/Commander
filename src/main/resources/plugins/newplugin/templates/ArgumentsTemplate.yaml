@@ -8,17 +8,15 @@
 options:
   - name: help
     short: h
-    long: help
     description: "Display help information"
     required: false
     hasArg: false
 
   # TODO: Add your custom arguments here
   # Example:
-  # - name: input
-  #   short: i
-  #   long: input-file
+  # - name: input              # Primary identifier - use this in code: cmd.getOptionValue("input")
+  #   short: i                 # Short option for command line: -i
   #   description: "Input file path"
   #   required: true
   #   hasArg: true
-  #   argHelpLabel: "file"
+  #   argHelpLabel: "file"    # Displays as: -i,--input <file>
