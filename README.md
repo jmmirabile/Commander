@@ -72,11 +72,11 @@ to see the Plugin's help and options.
 
 ### Installation
 
-1. **Download** the `Jex-1.0.3.jar` file (fat JAR with all dependencies) from the Releases link.
+1. **Download** the `Jex-1.0.4.jar` file (fat JAR with all dependencies) from the Releases link.
 
 2. **Run install** to set up Jex:
    ```bash
-   java -jar Jex-1.0.3.jar --install
+   java -jar Jex-1.0.4.jar --install
    ```
    After installation completes, the following has been created:
    * Configuration directories (OS-specific locations)

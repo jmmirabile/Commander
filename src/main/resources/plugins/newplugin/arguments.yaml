@@ -1,6 +1,6 @@
 # New Plugin Generator CLI Arguments
 config:
-  help_text_file: "/plugins/newplugin/help.txt"
+  help_text_file:1 "/plugins/newplugin/help.txt"
 
 options:
   - name: help

@@ -294,6 +294,17 @@ jex test <path>                        # hypothetical test runner plugin
 - [x] Added cross-platform installation instructions to generated README
 - [x] Updated README.md and CLAUDE.md for v1.0.2.2
 
+## Completed (v1.0.4 - Released 2026-01-23)
+
+- [x] YAML API Improvements (User Feedback)
+  - Renamed `argName` → `argHelpLabel` for clarity (it's a display label, not an identifier)
+  - Changed `name` field to be the primary identifier AND long option
+  - Removed redundant `long` field from templates (backward compatible)
+  - Clear, intuitive API: use `name` in code (cmd.hasOption("input"))
+  - Command line: `-i` (short) or `--input` (long from name)
+- [x] Updated all templates and documentation
+- [x] Backward compatible with old `long` and `argName` fields
+
 ## Completed (v1.0.3 - Released 2026-01-23)
 
 - [x] ArgumentParser Help System Refactoring (Major Developer Experience Improvement)
@@ -779,7 +790,7 @@ Combination of Option 3 + 5:
 
 ## Notes
 
-- Current version: 1.0.3 (as of 2026-01-23)
+- Current version: 1.0.4 (as of 2026-01-23)
 - Project renamed from "Commander" to "Jex" on 2026-01-03
 - Main branch: `main`
 - Deployment: Fat JAR distribution (`jex.jar`)
