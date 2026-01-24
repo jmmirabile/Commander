@@ -349,7 +349,7 @@ options:
     description: "Target URL"
     hasArg: true
     required: true
-    argName: URL
+    argHelpLabel: URL
 ```
 
 **Rationale:**

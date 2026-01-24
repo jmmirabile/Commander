@@ -21,4 +21,4 @@ options:
   #   description: "Input file path"
   #   required: true
   #   hasArg: true
-  #   argName: "file"
+  #   argHelpLabel: "file"

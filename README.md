@@ -90,7 +90,8 @@ to see the Plugin's help and options.
 4. **Verify installation**:
    ```bash
    jex --help
-   jex new-plugin --help    # Test internal plugin generator
+   jex -v     
+   jex new-plugin [name] # Create a new plugin project with Maven build system.
    ```
 
 ### Installation Locations
@@ -150,11 +151,28 @@ Jex stores its configuration in OS-specific locations:
 ├── arguments.yaml        # Jex's own CLI arguments
 └── plugins/
     ├── my-plugin.jar     # Self-contained plugin JAR
-    ├── another-plugin.jar
+    ├── another-plugin.jar 
     └── third-plugin.jar
 ```
 
 ## Plugin System
+
+You can create a plugin by running "jex new-plugin [name]" or "jex new-plugin [name] -p [java package]". This will ask to 
+create the plugin folder in the curren directory or let you type a new path for the project. Once the project 
+directory is created, open that project in your JAVA IDE as a Maven project. Everything will be ready, including a 
+main class for your plugin with the name you provided the command. 
+
+If you're migrated a standalone test class with a static main method with arguments to Jex, do the following:
+1. Open that file and copy the main method and other methods to this new class. 
+2. Modify or copy the package structure and add any utility classes to package.
+3. Fix any imports that need fixing.
+4. Add any libraries you need to the pom.xml file. Your IDE may have a Maven library/repo explorer. 
+5. Adding the arguments to the arguments.yaml
+6. Modify the main method to parse the arguments you added to arguments.yaml.
+7. Build it, go to a terminal, navigate to the project base directory, type "mvn clean package"
+8. Change directory to target, type "jex --install-plugin [command name] -jar [plugin jar name]"
+9. Now type, "jex -l" to list the plugins to see if your plugin was installed.
+10. 
 
 ### Plugin JAR Structure
 
@@ -461,7 +479,7 @@ import org.jex.cli.JexPlugin;
        description: "Input file path"
        required: true
        hasArg: true
-       argName: "file"
+       argHelpLabel: "file"
    ```
 
 4. **(Optional) Create custom help file** at `src/main/resources/help.txt`:

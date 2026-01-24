@@ -16,4 +16,4 @@ options:
     description: "Java package name for the plugin"
     required: false
     hasArg: true
-    argName: "package"
+    argHelpLabel: "package"

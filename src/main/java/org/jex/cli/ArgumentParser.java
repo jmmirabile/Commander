@@ -281,7 +281,11 @@ public class ArgumentParser {
                 builder.hasArg(hasArg);
             }
 
-            if (optionConfig.containsKey("argName")) {
+            // Check for argHelpLabel (preferred) or argName (legacy) for help text display
+            if (optionConfig.containsKey("argHelpLabel")) {
+                builder.argName((String) optionConfig.get("argHelpLabel"));
+            } else if (optionConfig.containsKey("argName")) {
+                // Backward compatibility: still support old argName property
                 builder.argName((String) optionConfig.get("argName"));
             }
 
