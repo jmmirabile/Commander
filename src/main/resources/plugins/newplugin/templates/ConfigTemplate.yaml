@@ -1,0 +1,16 @@
+# Plugin Configuration File
+# This file is embedded in your plugin JAR and loaded at runtime.
+# Use this for static configuration like default values, constants, mappings, etc.
+#
+# Load in your plugin code with:
+#   Map<String, Object> config = ConfigParser.load("/config.yaml", this.getClass());
+#
+# Access values with:
+#   String value = (String) config.get("key");
+#   String value = ConfigParser.getString(config, "key", "default");
+#   int value = ConfigParser.getInt(config, "key", 0);
+#   boolean value = ConfigParser.getBoolean(config, "key", false);
+
+greeting: "Hello from Jex!"
+version: "1.0.0"
+debug: false

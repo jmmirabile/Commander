@@ -2,7 +2,10 @@ package ${PACKAGE_NAME};
 
 import org.jex.cli.JexPlugin;
 import org.jex.cli.ArgumentParser;
+import org.jex.cli.ConfigParser;
 import org.apache.commons.cli.CommandLine;
+
+import java.util.Map;
 
 public class ${CLASS_NAME} implements JexPlugin {
 
@@ -16,6 +19,11 @@ public class ${CLASS_NAME} implements JexPlugin {
         // Parse arguments (automatically handles help, errors, and validation)
         CommandLine cmd = ArgumentParser.parse(args, getName(), this.getClass());
         if (cmd == null) return;  // Help was shown
+
+        // Load plugin configuration from embedded config.yaml
+        Map<String, Object> config = ConfigParser.load("/config.yaml", this.getClass());
+        String greeting = ConfigParser.getString(config, "greeting", "Hello!");
+        System.out.println(greeting);
 
         // TODO: Implement your plugin logic here
         // Access arguments using:

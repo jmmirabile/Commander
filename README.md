@@ -1,82 +1,43 @@
 # Jex
 
-A plugin-based CLI framework for Java that allows developers to create modular, extensible command-line applications.
+A plugin-based CLI framework for Java that allows developers to create command-line applications as plugins. Uses Maven to
+create each plugin project.
 
 ## Overview
+Jex, short for Java Executor. It is a Java-based command line, plugin framework. Plugins are self-contained
+JAR files that are added to the Jex plugins directory and registered in a plugin.yaml file.
 
-I had multiple Java "test" apps spread out across project directories. I needed a way to organize them and combine them 
-into a single framework. It seemed I could mimic similar implementation I did in Python. 
-
-I'm calling it Jex, short for Java Executor. It is a Java-based command line, plugin framework. Plugins are self-contained 
-JAR files that can be dropped into the plugins directory and registered in a plugin.yaml file.
-
-As I worked through the design, I decided to use Claude Code as well. The amount of time saved using
-AI tools like Claude is invaluable. Coding with AI is like having a robot or a development partner that can type 1000 
-characters per second. The more specific you can be when describing code or components, the better the result.
-
-However, I will point out, I came up with the architecture, plugin system, had written some of the code already and 
-decided on which libraries to use. When using AI for coding, we still need know what you're building, what good design is,
-as well as best practices. Use AI as a powerful assistant, but not a replacement for thinking.
-
-It was an iterative process, certainly not a single prompt that produced final application. It's cool to discuss design,
-code and changes with AI. It really does feel natural and they are doing a great job with the natural conversational 
-interaction. The cooperative coding session is always conversational, resulting in refinement, testing and iteration. 
-Code has to be reviewed, tested, retested and changed. I knew what I wanted, reviewed and tested the code, suggested changes, 
-and drove the effort. 
-
-I think its important to talk about the AI interaction. While AI can write code way faster than us humans, it does make 
-mistakes and lose the thread. There are also technical issues. If your IDE crashes, you may have to retrain your AI partner.
-When you start a new AI session, you need to instruct the AI to relearn your project and it does sometimes seem to have a 
-slightly different perspective on where you left off. For Claude Code specifically, you have to tell it to write the 
-TODO list to the project CLAUDE.md file. I did that, my IDE hung (Intellij) and when I restarted, did some work and 
-instructed Claude to update the TODO list, it created a new TODO.md file despite the fact there were existing TODO items
-in the CLAUDE.md file.
-
-## Architecture Origins
-The idea or concept behind this is based on the concept and lessons learned from my Python-based multi-platform REST client framework 
-project. Again, this was created for my use case, consolidating Java test classes. For example, I have a Java Test class that 
-connects to HTTPS endpoints with different TLS versions, ciphers, and keystores and certificate bundles. While that can be 
-done with openssl, sometimes showing others that the HTTPS endpont works with Java too. As we all know, sometimes you have to 
-prove something works. So, it's meant to be simple to migrate test programs to Jex and simple to run. The user should be able to 
-type "jex" and see help and the available options. So, you can type "jex -h" or "jex --list" to see plugins, or "jex plugin-name -h" 
-to see the Plugin's help and options.  
-
-- **Lazy loading** or **on-demand loading** of plugins. The first argument is either a Jex argument or the name of a plugin. Only that plugin is loaded
-  - As the number of plugins increases, loading them all would make Jex slower. No need to load all the plugins at once.
-- **Simplicity beats complexity** - Frameworks can become overhead, introduce unnecessary complexity, design challenges 
-  due to the framework requirements. I reviewed several Python "cli" tools, but they seemed to add unnecessary complexity.
-  For Jex, I could have used Picocli, but it doesn't lazy load and requires changes to the bootstrap or main 
-  application. Jex is simple, small and extensible and adding new plugins has no impact on Jex speed and 
-  does not require a recompile.
-- **YAML-based plugin registries** are cleaner than code-based registration.
-  - I considered using a simple properties file, but they would get messy as plugin count increased.
-  - Yaml is easier to read. A fair trade off I think. 
-- Each plugin is isolated and only loaded when invoked.
-- Minimal framework complexity - It's really just a bootstrap for command line apps.
-- Complete separation of concerns - Each plugin does it's own thing and should have no dependencies on others (unless you want them to)
-  - There is nothing keeping anyone from writing plugins that are executed in serieds or have some relationship.
-  - A plugin can use any Java library or framework as needed, but those resources should be within the Jar file as plugins are installed as jar files. 
-
+Features:
+ - Quickly create a Java maven based project that can be launched from the cmd line.
+ - Quick project setup using maven. Just open as a maven project in a Java IDE.
+ - Edit arguments.yaml file to add arguments, then add processing for each argument in the execute method.
+ - Arguments.yaml and built-in parsing makes adding arguments easy.
+ - Developers can create a new plugin by running `jex new-plugin [name]`
 
 **Key Features:**
 - Self-installing fat JAR with OS-specific wrapper scripts
 - YAML-based configuration for arguments and plugins
-- **Arguments** are defined in a yaml file, not code!
-- Dynamic plugin loading from JAR files
+- **Arguments** are defined in a yaml file, not code! (Still have to write code to process your arguments)
+- Dynamic plugin loading from JAR files. Just type "jex --list" to see plugins or "jex <plugin-name>" to run a plugin.
 - Built-in help and plugin management commands
-- Zero configuration required - just download and run "java -jar <jex jar file> --install"
+- Minimal setup - download and run "java -jar <jex jar file> --install" (Maven 3.6+ is required and is checked automatically)
 - Update Jex without overwriting the installed plugins.
 - Runs on Linux, MacOS and Windows
 
 ## Quick Start
 
+### Requirements
+
+   * Java 21 or later
+   * Maven 3.6+
+
 ### Installation
 
-1. **Download** the `Jex-1.0.4.jar` file (fat JAR with all dependencies) from the Releases link.
+1. **Download** the `Jex-<version>.jar` file (fat JAR with all dependencies) from the Releases link.
 
 2. **Run install** to set up Jex:
    ```bash
-   java -jar Jex-1.0.4.jar --install
+   java -jar Jex-<version>.jar --install
    ```
    After installation completes, the following has been created:
    * Configuration directories (OS-specific locations)
@@ -157,22 +118,21 @@ Jex stores its configuration in OS-specific locations:
 
 ## Plugin System
 
-You can create a plugin by running "jex new-plugin [name]" or "jex new-plugin [name] -p [java package]". This will ask to 
-create the plugin folder in the curren directory or let you type a new path for the project. Once the project 
-directory is created, open that project in your JAVA IDE as a Maven project. Everything will be ready, including a 
-main class for your plugin with the name you provided the command. 
+You can create a plugin by running "jex new-plugin [name]" or "jex new-plugin [name] -p [java package]". This will ask to
+create the plugin folder in the current directory or let you type a new path for the project. Once the project
+directory is created, open that project in your JAVA IDE as a Maven project. Everything will be ready, including a
+main class for your plugin with the name you provided the command.
 
-If you're migrated a standalone test class with a static main method with arguments to Jex, do the following:
-1. Open that file and copy the main method and other methods to this new class. 
+If you've migrated a standalone test class with a static main method with arguments to Jex, do the following:
+1. Open that file and copy the main method and other methods to this new class.
 2. Modify or copy the package structure and add any utility classes to package.
 3. Fix any imports that need fixing.
-4. Add any libraries you need to the pom.xml file. Your IDE may have a Maven library/repo explorer. 
-5. Adding the arguments to the arguments.yaml
+4. Add any libraries you need to the pom.xml file. Your IDE may have a Maven library/repo explorer.
+5. Add the arguments to arguments.yaml.
 6. Modify the main method to parse the arguments you added to arguments.yaml.
 7. Build it, go to a terminal, navigate to the project base directory, type "mvn clean package"
-8. Change directory to target, type "jex --install-plugin [command name] -jar [plugin jar name]"
+8. Change directory to target, type "jex --install-plugin [command name] --jar [plugin jar name]"
 9. Now type, "jex -l" to list the plugins to see if your plugin was installed.
-10. 
 
 ### Plugin JAR Structure
 
@@ -242,6 +202,30 @@ options:
     hasArg: false
 ```
 
+### Plugin Configuration (config.yaml)
+
+In addition to CLI arguments, plugins can bundle a `config.yaml` file for static configuration - default values,
+constants, or feature flags that don't change per-invocation:
+
+```yaml
+greeting: "Hello from Jex!"
+version: "1.0.0"
+debug: false
+```
+
+Load it in your plugin with `ConfigParser`:
+
+```java
+Map<String, Object> config = ConfigParser.load("/config.yaml", this.getClass());
+String greeting = ConfigParser.getString(config, "greeting", "Hello!");
+int retries = ConfigParser.getInt(config, "retries", 3);
+boolean debug = ConfigParser.getBoolean(config, "debug", false);
+```
+
+`config.yaml` is for defaults baked into the JAR; `arguments.yaml`/CLI flags are for what the user overrides at
+runtime. `ConfigParser` doesn't merge the two automatically - if you want a CLI flag to override a `config.yaml`
+default, check `cmd.hasOption(...)` first and fall back to the config value otherwise.
+
 ## Jex Built-in Commands
 
 ### Help
@@ -260,15 +244,17 @@ Initialize and install Jex:
 
 ```bash
 jex --install
-java -jar Jex-1.0.2.2.jar --install  # First-time installation
+java -jar Jex-<version>.jar --install  # First-time installation
 ```
 
 This command:
+- **Verifies** Maven 3.6+ is installed (required for plugin development) - exits with install/upgrade instructions if missing or too old
 - Creates configuration directory (OS-specific location)
 - Creates `plugins/` subdirectory
 - Generates empty `plugin.yaml` registry template
 - Generates default `arguments.yaml` for Jex
 - **Installs** `jex.jar` to the lib directory
+- **Refreshes** the Jex artifact in the local Maven repository (`~/.m2/...`) so plugin projects always build against the version just installed
 - **Creates** and installs OS-specific wrapper script (`jex` or `jex.bat`)
 - **Makes** the script executable (Unix/Linux/macOS)
 - **Checks** if bin directory is in PATH and provides instructions if needed
@@ -368,6 +354,7 @@ jex new-plugin my-tool --package com.mycompany.tools
 This creates a complete Maven project with:
 - Plugin class skeleton implementing the `JexPlugin` interface
 - Sample `arguments.yaml` for CLI arguments
+- Sample `config.yaml` for static plugin configuration
 - Maven `pom.xml` configured for Jex plugins
 - `.gitignore` file
 - README with build and installation instructions
@@ -386,7 +373,7 @@ jex --help
 jex --list
 
 # Install Jex
-java -jar Jex-1.0.2.2.jar --install
+java -jar Jex-<version>.jar --install
 
 # Create a new plugin project
 jex new-plugin my-awesome-tool --package com.example
@@ -394,28 +381,6 @@ jex new-plugin my-awesome-tool --package com.example
 # Run a plugin
 jex <plugin-name> [args...]
 ```
-
-### Installing a Plugin ⏳ Manual Process (Automated loading pending)
-
-1. **Copy** the plugin JAR to the plugins directory:
-   - Linux: `~/.config/Jex/plugins/`
-   - macOS: `~/Library/Application Support/Jex/plugins/`
-   - Windows: `%APPDATA%\Jex\plugins\`
-
-2. **Register** the plugin in `plugin.yaml`:
-   ```yaml
-   my-plugin:
-     jar: my-plugin.jar
-     class: com.example.MyPlugin
-     version: 1.0.0
-     description: "My custom plugin"
-   ```
-
-3. **Run** the plugin:
-   ```bash
-   Jex my-plugin [args...]
-   ```
-   *Note: Automatic plugin loading is in progress*
 
 ## Developing Plugins
 
@@ -486,9 +451,12 @@ import org.jex.cli.JexPlugin;
    - Shown when user runs `jex <plugin> --help`
    - If not specified, help is auto-generated from options
 
-5. **Build the plugin JAR** with `arguments.yaml` included as a resource
+5. **(Optional) Add static configuration** in `src/main/resources/config.yaml` for defaults, constants, or feature
+   flags, and load it with `ConfigParser.load("/config.yaml", this.getClass())` (see [Plugin Configuration](#plugin-configuration-configyaml) above)
 
-6. **Install the plugin**:
+6. **Build the plugin JAR** with `arguments.yaml` (and `config.yaml`, if used) included as resources
+
+7. **Install the plugin**:
    ```bash
    jex --install-plugin my-plugin --jar target/my-plugin.jar
    ```
@@ -502,10 +470,209 @@ my-plugin/
 │       ├── java/
 │       │   └── com/example/MyPlugin.java
 │       └── resources/
-│           └── arguments.yaml
+│           ├── arguments.yaml
+│           └── config.yaml
 ├── pom.xml
 └── README.md
 ```
+
+## Deployment Patterns
+
+Jex plugins can be deployed in two ways depending on your use case and target audience.
+
+### Pattern 1: Traditional Jex Plugin (Default)
+
+Users install Jex and run your plugin through the `jex` command.
+
+**Use this when:**
+- Building internal tools or developer utilities
+- Users are comfortable with command-line tools
+- You want to leverage Jex's plugin management (`--install-plugin`, `--update-plugin`)
+- You're building a suite of related plugins
+
+**Example: HelloWorld Plugin**
+
+Create the plugin:
+```bash
+jex new-plugin hello-world --package com.example
+```
+
+**Plugin code (`HelloWorld.java`):**
+```java
+public class HelloWorld implements JexPlugin {
+    @Override
+    public String getName() {
+        return "hello-world";
+    }
+
+    @Override
+    public void execute(String[] args) {
+        CommandLine cmd = ArgumentParser.parse(args, getName(), this.getClass());
+        if (cmd == null) return;
+
+        String name = cmd.getOptionValue("name", "World");
+        System.out.println("Hello, " + name + "!");
+    }
+}
+```
+
+**Arguments (`arguments.yaml`):**
+```yaml
+options:
+  - name: name
+    short: n
+    description: "Name to greet"
+    required: false
+    hasArg: true
+    argHelpLabel: "name"
+```
+
+**Build and install:**
+```bash
+mvn clean package
+jex --install-plugin hello-world --jar target/hello-world-plugin.jar
+```
+
+**Users run it:**
+```bash
+jex hello-world --name Alice
+# Output: Hello, Alice!
+```
+
+**Dependencies in `pom.xml`:**
+```xml
+<dependency>
+    <groupId>org.jex.cli</groupId>
+    <artifactId>Jex</artifactId>
+    <!-- Correct version number on existing projects when upgrading Jex to new version -->
+    <version>1.0.5</version>
+    <scope>provided</scope>  <!-- Jex provides these at runtime -->
+</dependency>
+```
+
+---
+
+### Pattern 2: Standalone Application
+
+Bundle Jex as a library inside your application JAR. Users run your tool directly without installing Jex.
+
+**Use this when:**
+- Distributing to non-technical users or customers
+- Building single-purpose utilities
+- You want a simple distribution model (single JAR download)
+- You're using code obfuscation tools
+- Users shouldn't know or care about Jex
+
+**Example: HelloWorld Standalone App**
+
+Start with the same plugin template:
+```bash
+jex new-plugin hello-world --package com.example
+```
+
+**1. Modify `pom.xml` - Change Jex dependency scope:**
+```xml
+<dependency>
+    <groupId>org.jex.cli</groupId>
+    <artifactId>Jex</artifactId>
+    <!-- Correct version number on existing projects when upgrading Jex to new version -->
+    <version>1.0.5</version>
+    <!-- Remove <scope>provided</scope> to bundle Jex in JAR -->
+</dependency>
+```
+
+**2. Add Main-Class to Maven Shade Plugin:**
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>3.5.1</version>
+    <executions>
+        <execution>
+            <phase>package</phase>
+            <goals>
+                <goal>shade</goal>
+            </goals>
+            <configuration>
+                <createDependencyReducedPom>false</createDependencyReducedPom>
+                <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>com.example.HelloWorldMain</mainClass>
+                    </transformer>
+                </transformers>
+                <filters>
+                    <filter>
+                        <artifact>*:*</artifact>
+                        <excludes>
+                            <exclude>META-INF/*.SF</exclude>
+                            <exclude>META-INF/*.DSA</exclude>
+                            <exclude>META-INF/*.RSA</exclude>
+                        </excludes>
+                    </filter>
+                </filters>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+**3. Create a Main class (`HelloWorldMain.java`):**
+```java
+package com.example;
+
+public class HelloWorldMain {
+    public static void main(String[] args) {
+        HelloWorld plugin = new HelloWorld();
+        plugin.execute(args);
+    }
+}
+```
+
+**4. Keep the same plugin code and arguments.yaml**
+
+No changes needed to `HelloWorld.java` or `arguments.yaml` - they work identically in both patterns.
+
+**Build:**
+```bash
+mvn clean package
+```
+
+**Users run it directly (no Jex installation needed):**
+```bash
+java -jar hello-world-plugin.jar --name Alice
+# Output: Hello, Alice!
+```
+
+**Distribution:**
+- Rename JAR: `cp target/hello-world-plugin.jar hello-world.jar`
+- Distribute single JAR file
+- Users don't need to install Jex or know it exists
+
+---
+
+### Comparison
+
+| Feature | Traditional Plugin | Standalone App |
+|---------|-------------------|----------------|
+| **Distribution** | Plugin JAR + Jex installation | Single fat JAR |
+| **User runs** | `jex hello-world --name Alice` | `java -jar hello-world.jar --name Alice` |
+| **Jex dependency** | `<scope>provided</scope>` | No scope (bundled) |
+| **Main class** | Not needed | Required |
+| **JAR size** | Small (~10KB plugin only) | Larger (~5MB with Jex + deps) |
+| **Updates** | `jex --update-plugin` | Re-download JAR |
+| **Plugin management** | Yes | No |
+| **Use Jex features** | ArgumentParser, ConfigParser | ArgumentParser, ConfigParser |
+| **Best for** | Developer tools, internal use | Customer-facing, external distribution |
+
+---
+
+### Key Takeaway
+
+Both patterns use the **same plugin code**. The only differences are:
+1. How you configure `pom.xml` (dependency scope + main class)
+2. How users run it (`jex plugin-name` vs `java -jar app.jar`)
+
+Choose the pattern that fits your distribution model and target audience.
 
 ## Building Jex from Source
 
@@ -525,12 +692,12 @@ my-plugin/
 
 3. **The built JAR** will be at:
    ```
-   target/Jex-1.0.2.2.jar
+   target/Jex-<version>.jar
    ```
 
 4. **Install it**:
    ```bash
-   java -jar target/Jex-1.0.2.2.jar --install
+   java -jar target/Jex-<version>.jar --install
    ```
 
 ### Development Commands
@@ -560,8 +727,12 @@ Jex/
 │   │   │   ├── Install.java          # Install command implementation
 │   │   │   ├── JexPlugin.java        # JexPlugin interface (2 methods)
 │   │   │   ├── PluginLoader.java     # Dynamic JAR loading via URLClassLoader
+│   │   │   ├── PluginManager.java    # Plugin install/update/uninstall lifecycle
+│   │   │   ├── PluginMetadata.java   # Plugin metadata data class
 │   │   │   ├── PathConfig.java       # OS-aware path management
 │   │   │   ├── ArgumentParser.java   # Argument parsing with automatic help handling
+│   │   │   ├── ConfigParser.java     # Static YAML config loading (config.yaml)
+│   │   │   ├── JexUtil.java          # Shared utilities (JAR scanning, Maven version checks)
 │   │   │   └── JexMavenUtil.java     # Maven utilities (dynamic version detection)
 │   │   ├── java/org/jex/plugins/
 │   │   │   └── newplugin/
@@ -573,31 +744,38 @@ Jex/
 │   │           └── newplugin/        # Plugin generator resources
 │   └── test/
 │       └── java/org/jex/cli/
-│           └── AppTest.java
+│           └── JexTest.java
 ├── pom.xml                            # Maven build configuration
 ├── CLAUDE.md                          # Project instructions for Claude Code
-├── TODO.md                            # Persistent TODO list
 └── README.md                          # This file
 ```
 
 ## Implementation Status
 
-### ✅ Completed Features (v1.0.2)
-- **Minimal core architecture** - Only 3 built-in commands
+### ✅ Completed Features (through v1.0.4)
+- **Minimal core architecture** - Only a few built-in commands (`--install`, `--list`/`-l`, `--help`/`-h`, `-v`/`--version`, plugin management)
 - **Self-installing fat JAR** with Maven Shade Plugin
 - **OS-specific installation** (Linux, macOS, Windows)
 - **Wrapper script** generation and installation
-- **Help system** (`--help`, `-h`)
+- **Help system** (`--help`, `-h`) with two-tier plugin help - auto-generated quick reference vs. custom `help.txt`
 - **Install command** (`--install`) - renamed from `--setup`
 - **List plugins** command (`--list`, `-l`)
 - **Dynamic plugin loading** - URLClassLoader-based JAR loading
 - **Plugin instantiation and execution**
-- **YAML-based argument parsing** for plugins
+- **Plugin lifecycle management** - `--install-plugin`, `--update-plugin`, `--uninstall-plugin`
+- **YAML-based argument parsing** for plugins via `ArgumentParser.parse()` - handles help, validation, and errors in one call
 - **Configuration directory management**
 - **Dynamic version detection** - Uses Maven metadata API for automatic version resolution
 - **Internal plugin discovery** - Automatic discovery of plugins in `org.jex.plugins` package
-- **Plugin generator** (`new-plugin`) - Internal plugin that creates complete Maven projects with correct version
+- **Plugin generator** (`new-plugin`) - Internal plugin that creates complete Maven projects with `arguments.yaml` and the correct version
 - **Package reorganization** - Migrated from `solutions.cloudbusiness.cli` to `org.jex.cli`
+
+### ✅ New in v1.0.5
+- **Fixed** `new-plugin --package` not propagating the package name into the generated `pom.xml`'s groupId
+- **Fixed** an `arguments.yaml` typo that silently broke `new-plugin`'s own argument parsing (`--package` was rejected as unrecognized)
+- **`--install`** now verifies Maven 3.6+ is installed, exiting with install/upgrade instructions if missing or too old
+- **`--install`** now refreshes the Jex artifact in the local Maven repository on every run, so plugin projects never build against a stale cached copy
+- **New `config.yaml`/`ConfigParser`** - static plugin configuration (defaults, constants, feature flags), scaffolded by `new-plugin` alongside `arguments.yaml`
 
 ### 🚀 Architecture Achievements
 - **Lazy loading** - Plugins only loaded when invoked

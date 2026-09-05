@@ -9,6 +9,8 @@ import java.nio.file.StandardCopyOption;
 
 public class Install {
 
+    private static final String REQUIRED_MAVEN_VERSION = "3.6";
+
     private static String getJarPath() {
         try {
             return new File(Install.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
@@ -19,6 +21,24 @@ public class Install {
     }
 
     public static void run() {
+        // Maven is required to build and install plugins (new-plugin, --install-plugin workflow)
+        String mavenVersion = JexUtil.getMavenVersionOrNull();
+
+        if (mavenVersion == null) {
+            System.err.println("Error: Maven is required to install Jex.");
+            System.err.println("Please install Maven: https://maven.apache.org/install.html");
+            System.err.println("\nVerify installation with: mvn --version");
+            System.exit(1);
+            return;
+        }
+
+        if (!JexUtil.isVersionAtLeast(mavenVersion, REQUIRED_MAVEN_VERSION)) {
+            System.err.println("Error: Jex requires Maven " + REQUIRED_MAVEN_VERSION + "+ (detected " + mavenVersion + ").");
+            System.err.println("Please upgrade Maven: https://maven.apache.org/install.html");
+            System.exit(1);
+            return;
+        }
+
         Path configPath = Paths.get(PathConfig.getConfigDirectory());
         Path pluginsPath = Paths.get(PathConfig.getPluginsDirectory());
         Path pluginYamlPath = Paths.get(PathConfig.getPluginYamlPath());
@@ -59,6 +79,10 @@ public class Install {
 
             // Install Jex JAR
             installJexJar();
+
+            // Refresh Jex in the local Maven repository so plugin projects (new-plugin)
+            // always compile against the version that was just installed
+            installJexToMavenRepo();
 
             // Install wrapper script
             installWrapperScript();
@@ -101,6 +125,42 @@ public class Install {
         // Copy JAR to lib directory
         Files.copy(Paths.get(jarPath), targetJar, StandardCopyOption.REPLACE_EXISTING);
         System.out.println("Installed Jex JAR to: " + targetJar);
+    }
+
+    private static void installJexToMavenRepo() {
+        String jexJar = Paths.get(PathConfig.getLibDirectory(), "jex.jar").toString();
+        String jexVersion = JexMavenUtil.getVersion();
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "mvn", "install:install-file",
+                    "-Dfile=" + jexJar,
+                    "-DgroupId=org.jex.cli",
+                    "-DartifactId=Jex",
+                    "-Dversion=" + jexVersion,
+                    "-Dpackaging=jar",
+                    "-q"
+            );
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            // Consume output to prevent blocking
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                while (reader.readLine() != null) {
+                    // discard
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                System.out.println("Installed Jex to Maven local repository (org.jex.cli:Jex:" + jexVersion + ")");
+            } else {
+                System.err.println("Warning: Failed to install Jex to Maven local repository");
+                System.err.println("  Plugin development (new-plugin) may not build correctly until this is resolved");
+            }
+        } catch (Exception e) {
+            System.err.println("Warning: Could not install Jex to Maven local repository: " + e.getMessage());
+        }
     }
 
     private static void installWrapperScript() throws IOException {

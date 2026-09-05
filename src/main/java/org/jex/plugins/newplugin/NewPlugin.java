@@ -80,6 +80,7 @@ public class NewPlugin implements JexPlugin {
         System.out.println("This will create a Java Maven project with:");
         System.out.println("  • JexPlugin class implementing the JexPlugin interface");
         System.out.println("  • arguments.yaml for CLI argument definitions");
+        System.out.println("  • config.yaml for static plugin configuration");
         System.out.println("  • pom.xml configured for Jex plugins");
         System.out.println("  • README.md with usage instructions");
         System.out.println("  • Complete project structure ready to open in your IDE");
@@ -109,9 +110,10 @@ public class NewPlugin implements JexPlugin {
             createProjectStructure(projectPath, packageName);
 
             // Generate files
-            generatePomXml(projectPath, sanitizedName);
+            generatePomXml(projectPath, sanitizedName, packageName);
             generatePluginClass(projectPath, packageName, className, sanitizedName);
             generateArgumentsYaml(projectPath, sanitizedName);
+            generateConfigYaml(projectPath);
             generateReadme(projectPath, sanitizedName, className, packageName);
             generateGitignore(projectPath);
 
@@ -192,12 +194,13 @@ public class NewPlugin implements JexPlugin {
         System.out.println("✓ Created project structure");
     }
 
-    private void generatePomXml(Path projectPath, String pluginName) throws IOException {
+    private void generatePomXml(Path projectPath, String pluginName, String packageName) throws IOException {
         String template = loadTemplate("/plugins/newplugin/templates/PomTemplate.xml");
         String artifactId = pluginName + "-plugin";
         String jexVersion = JexMavenUtil.getVersion();
 
         String content = template
+                .replace("${GROUP_ID}", packageName)
                 .replace("${ARTIFACT_ID}", artifactId)
                 .replace("${PLUGIN_NAME_CAPITALIZED}", capitalize(pluginName))
                 .replace("${JEX_VERSION}", jexVersion);
@@ -229,6 +232,13 @@ public class NewPlugin implements JexPlugin {
 
         writeFile(projectPath.resolve("src/main/resources/arguments.yaml"), content);
         System.out.println("✓ Generated arguments.yaml");
+    }
+
+    private void generateConfigYaml(Path projectPath) throws IOException {
+        String template = loadTemplate("/plugins/newplugin/templates/ConfigTemplate.yaml");
+
+        writeFile(projectPath.resolve("src/main/resources/config.yaml"), template);
+        System.out.println("✓ Generated config.yaml");
     }
 
     private void generateReadme(Path projectPath, String pluginName, String className, String packageName) throws IOException {
@@ -327,15 +337,9 @@ dependency-reduced-pom.xml
     }
 
     private void installJexToMavenRepo() {
-        System.out.println("\nChecking Maven local repository...");
-
-        // Check if already installed (avoid re-installing every time)
-        if (isJexInMavenRepo()) {
-            System.out.println("✓ Jex already in Maven local repository");
-            return;
-        }
-
-        System.out.println("Installing Jex to Maven local repository...");
+        // Always (re)install: cheap and idempotent, and avoids silently building
+        // against a stale cached copy if Jex was updated without a version bump.
+        System.out.println("\nInstalling Jex to Maven local repository...");
         String jexJar = PathConfig.getLibDirectory() + File.separator + "jex.jar";
         String jexVersion = JexMavenUtil.getVersion();
 
@@ -374,16 +378,6 @@ dependency-reduced-pom.xml
             System.err.println("⚠ Warning: Could not install to Maven repo: " + e.getMessage());
             System.err.println("  JexPlugin development may require manual Maven setup");
         }
-    }
-
-    private boolean isJexInMavenRepo() {
-        String jexVersion = JexMavenUtil.getVersion();
-        String mavenRepo = System.getProperty("user.home") +
-                File.separator + ".m2" + File.separator + "repository" +
-                File.separator + "org" + File.separator + "jex" +
-                File.separator + "cli" + File.separator + "Jex" +
-                File.separator + jexVersion + File.separator + "Jex-" + jexVersion + ".jar";
-        return new File(mavenRepo).exists();
     }
 
     private String loadTemplate(String templatePath) throws IOException {

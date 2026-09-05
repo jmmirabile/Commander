@@ -294,6 +294,30 @@ jex test <path>                        # hypothetical test runner plugin
 - [x] Added cross-platform installation instructions to generated README
 - [x] Updated README.md and CLAUDE.md for v1.0.2.2
 
+## Completed (v1.0.5 - Released 2026-09-05)
+
+- [x] Fixed `new-plugin --package` not propagating the package name into the generated `pom.xml`'s groupId
+  - `NewPlugin.generatePomXml()` now receives `packageName` and substitutes it into `${GROUP_ID}`
+  - `PomTemplate.xml` changed from hardcoded `<groupId>com.example</groupId>` to `<groupId>${GROUP_ID}</groupId>`
+- [x] Fixed `arguments.yaml` typo (`help_text_file:1 "..."`) that silently broke `new-plugin`'s own argument parsing
+  - The malformed YAML turned `config` into a string instead of a map, throwing a `ClassCastException` that was
+    swallowed, silently emptying the `Options` list (so `--package` was rejected as unrecognized)
+- [x] `jex --install` now verifies Maven 3.6+ is installed before doing anything
+  - Exits with install/upgrade instructions (and no side effects) if Maven is missing or below 3.6
+  - New `JexUtil.getMavenVersionOrNull()` / `JexUtil.isVersionAtLeast()` shared helpers
+- [x] `jex --install` now refreshes the Jex artifact in the local Maven repository (`~/.m2/...`) on every run
+  - Previously only `new-plugin` seeded this, and only if nothing already existed at that version path - so
+    updating Jex without a version bump left plugin projects silently compiling against a stale cached copy
+  - `NewPlugin.installJexToMavenRepo()` also simplified to always reinstall instead of skip-if-exists
+- [x] New `config.yaml` / `ConfigParser` feature for static plugin configuration
+  - `ConfigParser.load()`, `getString()`, `getInt()`, `getBoolean()` for reading a bundled `config.yaml`
+  - `new-plugin` now scaffolds `config.yaml` alongside `arguments.yaml` and wires a usage example into the
+    generated plugin class
+- [x] Updated README.md - added Plugin Configuration (config.yaml) docs, fixed several stale/incorrect sections
+  found during review (wrong `new-plugin` command syntax, contradictory manual-install section, stale version
+  references), switched illustrative jar-filename references to a `Jex-<version>.jar` placeholder so they can't
+  go stale again
+
 ## Completed (v1.0.4 - Released 2026-01-23)
 
 - [x] YAML API Improvements (User Feedback)
@@ -790,7 +814,7 @@ Combination of Option 3 + 5:
 
 ## Notes
 
-- Current version: 1.0.4 (as of 2026-01-23)
+- Current version: 1.0.5 (as of 2026-09-05)
 - Project renamed from "Commander" to "Jex" on 2026-01-03
 - Main branch: `main`
 - Deployment: Fat JAR distribution (`jex.jar`)
